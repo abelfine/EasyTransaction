@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import com.yiqiniu.easytrans.core.ExecutorHelper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -82,8 +83,13 @@ public class EasyTransCoreConfiguration {
 	
 	@Bean
 	@ConditionalOnMissingBean(EasyTransFacade.class)
-	public EasyTransFacadeImpl easyTransFacadeImpl(ApplicationContext ctx, EasyTransSynchronizer synchronizer){
-		return new EasyTransFacadeImpl(ctx, synchronizer);
+	public EasyTransFacadeImpl easyTransFacadeImpl(ExecutorHelper helper, EasyTransSynchronizer synchronizer){
+		return new EasyTransFacadeImpl(helper, synchronizer);
+	}
+
+	@Bean
+	public ExecutorHelper executorHelper(ApplicationContext context){
+		return new ExecutorHelper(context);
 	}
 	
 	@Bean
@@ -99,7 +105,7 @@ public class EasyTransCoreConfiguration {
 	 * @return
 	 */
 	@Bean
-	public RemoteServiceCaller remoteServiceCaller(@Lazy EasyTransRpcConsumer consumer, @Lazy EasyTransMsgPublisher publisher,
+	public RemoteServiceCaller remoteServiceCaller(@Lazy EasyTransRpcConsumer consumer, @Lazy EasyTransMsgPublisher publisher,@Lazy ExecutorHelper helper,
 			ObjectSerializer serializer){
 		return new RemoteServiceCaller(consumer, publisher, serializer);
 	}
@@ -174,6 +180,8 @@ public class EasyTransCoreConfiguration {
 	public IdempotentHelper idempotentHelper(DataSourceSelector selector, ListableProviderFactory providerFactory){
 		return new IdempotentHelper(selector, providerFactory);
 	}
+
+
 	
 	@Bean
 	@ConditionalOnMissingBean(ListableProviderFactory.class)

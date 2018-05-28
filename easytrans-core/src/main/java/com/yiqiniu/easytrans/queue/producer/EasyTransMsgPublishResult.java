@@ -1,6 +1,8 @@
 package com.yiqiniu.easytrans.queue.producer;
 
-public class EasyTransMsgPublishResult {
+import java.io.Serializable;
+
+public class EasyTransMsgPublishResult implements Serializable{
 	
     private String messageId;
     private String topic;

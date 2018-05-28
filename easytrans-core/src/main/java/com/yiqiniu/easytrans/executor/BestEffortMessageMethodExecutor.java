@@ -17,7 +17,7 @@ import com.yiqiniu.easytrans.protocol.EasyTransRequest;
 import com.yiqiniu.easytrans.protocol.TransactionId;
 import com.yiqiniu.easytrans.protocol.msg.PublishResult;
 import com.yiqiniu.easytrans.util.ReflectUtil;
-
+@DeliveryMode(ServiceType.MESSAGE)
 public class BestEffortMessageMethodExecutor implements EasyTransExecutor{
 
 	private EasyTransSynchronizer transSynchronizer;
@@ -52,7 +52,7 @@ public class BestEffortMessageMethodExecutor implements EasyTransExecutor{
 				if(logProcessContext.getFinalMasterTransStatus()){
 					BusinessIdentifer businessIdentifer = ReflectUtil.getBusinessIdentifer(params.getClass());
 					String messageId = getMessageId("M" + logProcessContext.getAndIncTransUniqueId(), logContext.getTransactionId());
-					publisher.publish(businessIdentifer.appId(), businessIdentifer.busCode(), sameBusinessCallSeq, messageId, params,logProcessContext);
+					publisher.call(businessIdentifer.appId(), businessIdentifer.busCode(), sameBusinessCallSeq, messageId, params,logProcessContext);
 					LOG.info("Best effort message sent." + messageId);
 				}
 				return true;

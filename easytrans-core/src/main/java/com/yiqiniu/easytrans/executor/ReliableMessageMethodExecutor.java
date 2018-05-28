@@ -22,13 +22,13 @@ import com.yiqiniu.easytrans.protocol.TransactionId;
 import com.yiqiniu.easytrans.protocol.msg.PublishResult;
 import com.yiqiniu.easytrans.queue.producer.EasyTransMsgPublishResult;
 import com.yiqiniu.easytrans.util.ReflectUtil;
-
+@DeliveryMode(ServiceType.MESSAGE)
 public class ReliableMessageMethodExecutor implements EasyTransExecutor,LogProcessor,DemiLogEventHandler {
 
 	private EasyTransSynchronizer transSynchronizer;
 	private RemoteServiceCaller publisher;
-	
-	
+
+
 	public ReliableMessageMethodExecutor(EasyTransSynchronizer transSynchronizer, RemoteServiceCaller publisher) {
 		super();
 		this.transSynchronizer = transSynchronizer;
@@ -36,18 +36,18 @@ public class ReliableMessageMethodExecutor implements EasyTransExecutor,LogProce
 	}
 
 	private Logger LOG = LoggerFactory.getLogger(this.getClass());
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <P extends EasyTransRequest<R,E>,E extends EasyTransExecutor,R extends Serializable> Future<R> execute(final Integer callSeq, final P params) {
-	
+
 		MessageRecordContent content = new MessageRecordContent();
 		content.setParams(params);
 		content.setCallSeq(callSeq);
 		transSynchronizer.registerLog(content);
 		final PublishResult result = new PublishResult();
 		result.setMessageContentId(content.getcId());
-		
+
 		FutureTask<PublishResult> future = new FutureTask<PublishResult>(new Callable<PublishResult>() {
 			@Override
 			public PublishResult call() throws Exception {
@@ -55,7 +55,7 @@ public class ReliableMessageMethodExecutor implements EasyTransExecutor,LogProce
 			}
 		});
 		future.run();
-		
+
 		return (Future<R>) future;
 	}
 
@@ -87,7 +87,7 @@ public class ReliableMessageMethodExecutor implements EasyTransExecutor,LogProce
 			TransactionId parentTrxId = logCtx.getTransactionId();
 			//send message
 			BusinessIdentifer businessIdentifer = ReflectUtil.getBusinessIdentifer(msg.getClass());
-			EasyTransMsgPublishResult send = publisher.publish(businessIdentifer.appId(), businessIdentifer.busCode(), content.getCallSeq(), getMessageId(content, parentTrxId), msg,logCtx);
+			EasyTransMsgPublishResult send = (EasyTransMsgPublishResult)publisher.call(businessIdentifer.appId(), businessIdentifer.busCode(), content.getCallSeq(), getMessageId(content, parentTrxId), msg,logCtx);
 			//writeLog
 			MessageSentContent messageSentContent = new MessageSentContent();
 			messageSentContent.setLeftDemiConentId(leftContent.getcId());
